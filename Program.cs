@@ -1,8 +1,11 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
+using System.Net;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+
 
 namespace a3_down
 {
@@ -67,7 +70,31 @@ namespace a3_down
                 apiJson = data.SelectToken("$..episodes..urlVideo");
 
                 Console.WriteLine($@"Found: {episodeNumber} - {seoTitle}");
-                
+                Console.WriteLine($@"Parsing: {apiJson}");
+
+                htmlDoc = doc.Load(apiJson);
+
+                if (htmlDoc == null)
+                {
+                    Console.WriteLine(urlNotFound);
+                    return;
+                }
+
+
+                var jsonData = string.Empty;
+
+                using (var webClient = new WebClient())
+                {
+
+                    jsonData = webClient.DownloadString(apiJson);
+                }
+
+                data = JsonConvert.DeserializeObject(jsonData);
+                string m3u8pl = data["sources"][0]["src"];
+
+                Console.WriteLine($@"Master Playlist Found: {m3u8pl}");
+
+
             }
 
         }
@@ -93,4 +120,7 @@ namespace a3_down
         }
 
     }
+
+
 }
+
